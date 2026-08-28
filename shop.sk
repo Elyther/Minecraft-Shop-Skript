@@ -1,0 +1,656 @@
+# ================= Elyther SMP SHOP SYSTEM =================
+
+options:
+
+# <GUI TITLE>
+	mainshop_title: SHOP
+	endshop_title: SHOP - END
+	nethershop_title: SHOP - NETHER
+	gearshop_title: SHOP - GEAR
+	foodshop_title: SHOP - FOOD
+	pvpshop_title: SHOP - PVP
+	farmshop_title: SHOP - FARM
+
+# <TEXT NOTIFICATION>
+	purchase_successful_text: "&fYou purchased &f<#00a4fc>%{_amount}%x %{_itemName}% &ffor: <#00fc00>$%{_formattedPrice}%"
+	not_enough_money_text: "&cYou don't have enough money."
+	inventory_full_text: "&cYour inventory is full."
+	
+# <SOUNDS>
+	purchase_successful_sound: ENTITY.EXPERIENCE_ORB.PICKUP
+	purchase_successful_sound_volume: 0.5
+	
+	purchase_unsuccessful_sound: ENTITY.VILLAGER.NO
+	purchase_unsuccessful_sound_volume: 0.5
+	
+	click_sound: UI.BUTTON.CLICK
+	click_sound_volume: 0.5
+	
+# <PRICES>
+#		<END CATEGORY>
+	Enderchest_price: 2500 
+	end.Enderpearl_price: 75
+	Endstone_price: 8
+	Dragonbreath_price: 1000 
+	Endrod_price: 100
+	Chorusfruit_price: 10
+	PoppedChorusfruit_price: 15
+	Shulkershell_price: 350
+	Shulkerbox_price: 800
+	
+#		<NETHER CATEGORY>
+	Blazerod_price: 150
+	Netherwart_price: 15
+	Glowstonedust_price: 15
+	Magmacream_price: 15
+	Ghasttear_price: 350
+	Quartz_price: 15
+	Soulsand_price: 50
+	Magmablock_price: 35
+	Cryingobsidian_price: 150
+	
+#		<GEAR CATEGORY>	
+	Obsidian_price: 100
+	Endcrystal_price: 350
+	Respawnanchor_price: 1000 
+	Glowstone_price: 100
+	Totemofundying_price: 1250 
+	gear.Enderpearl_price: 75
+	gear.Goldenapple_price: 250
+	Bottleo'enchanting_price: 100
+	Arrow_price: 250
+	
+#		<FOOD CATEGORY>
+	Potato_price: 75
+	Sweetberries_price: 50
+	Melonslice_price: 10 
+	Carrot_price: 65
+	Apple_price: 25
+	Cookedchicken_price: 30
+	Steak_price: 35
+	Goldencarrot_price: 50
+	food.Goldenapple_price: 250
+
+#		<PVP CATEGORY>
+	Diamondhelmet_price: 2500
+	Diamondchestplate_price: 3500
+	Diamondleggings_price: 3000
+	Diamondboots_price: 2000
+	Diamondsword_price: 2000
+
+#		<FARM CATEGORY>
+	Piston_price: 150
+	Stickypiston_price: 200
+	Redstonedust_price: 10
+	Redstoneblock_price: 90
+	Noteblock_price: 50
+	Redstonetorch_price: 15
+	Tripwirehook_price: 25
+	Hopper_price: 250
+	Chest_price: 50
+	Repeater_price: 50
+	Comparator_price: 75
+	
+# --------------QUICK BUY SYSTEM----------------
+
+function doQuickBuy(p: player, item: item, price: int, amount: int):
+	set {_totalCost} to {_amount} * {_price}
+	if {_p} doesn't have enough space for {_amount} of {_item}:
+		send {@inventory_full_text} to {_p}
+		send action bar {@inventory_full_text} to {_p}
+		play sound "{@purchase_unsuccessful_sound}" at volume {@purchase_unsuccessful_sound_volume} to {_p}
+		stop
+	if {_p}'s balance is less than {_totalCost}:
+		send {@not_enough_money_text} to {_p}
+		send action bar {@not_enough_money_text} to {_p}
+		play sound "{@purchase_unsuccessful_sound}" at volume {@purchase_unsuccessful_sound_volume} to {_p}
+		stop
+	give {_p} {_amount} of {_item}
+	remove {_totalCost} from {_p}'s balance
+	set {_formattedPrice} to a("%{_totalCost}%")
+	set {_itemName} to proper case "%type of {_item}%"
+	send {@purchase_successful_text} to {_p}
+	send action bar {@purchase_successful_text} to {_p}
+	play sound "{@purchase_successful_sound}" at volume {@purchase_successful_sound_volume} to {_p}
+
+function processClick(p: player, item: item, price: int, category: string, amount: int, isQuick: boolean):
+	set {n.%{_p}%} to {_amount}
+	if {_isQuick} is true:
+		doQuickBuy({_p}, {_item}, {_price}, {_amount})
+	else:
+		play sound "{@click_sound}" at volume {@click_sound_volume} to {_p}
+		buy({_p}, {_item}, {_price}, {_category})
+
+# --------------MAIN SHOP----------------
+
+command /shop:
+	trigger:
+		openShop(player)
+		
+function openShop(p: player):
+	set {_inv} to a new chest inventory with 3 row with name "{@mainshop_title}"
+	set slot 15 of {_inv} to end stone named "<#00F986>ᴇɴᴅ" with lore "&fClick to view the End shop"
+	set slot 11 of {_inv} to netherrack named "<#00F986>ɴᴇᴛʜᴇʀ" with lore "&fClick to view the Nether shop"
+	set slot 13 of {_inv} to totem of undying named "<#00F986>ɢᴇᴀʀ" with lore "&fClick to view the Gear shop"
+	set slot 12 of {_inv} to cooked beef named "<#00F986>ꜰᴏᴏᴅ" with lore "&fClick to view the Food shop"
+	set slot 14 of {_inv} to amethyst shard named "<#A303F9>ᴄʀʏꜱᴛᴀʟ ꜱʜᴏᴘ" with lore "&fClick to open the Crystal shop"
+	set slot 4 of {_inv} to diamond chestplate named "<#00F986>ᴘᴠᴘ" with lore "&fClick to view the PvP shop"
+	set slot 22 of {_inv} to piston named "<#00F986>ꜰᴀʀᴍ" with lore "&fClick to view the Farm shop"
+	open {_inv} to {_p}
+
+on inventory click:
+	if name of event-inventory is "{@mainshop_title}":
+		if clicked inventory isn't player's inventory:
+			cancel event
+			if index of event-slot = 4:
+				openPvpShop(player)
+				play sound "{@click_sound}" at volume {@click_sound_volume} to player
+			if index of event-slot = 11:
+				openNetherShop(player)
+				play sound "{@click_sound}" at volume {@click_sound_volume} to player
+			if index of event-slot = 12:
+				openFoodShop(player)
+				play sound "{@click_sound}" at volume {@click_sound_volume} to player
+			if index of event-slot = 13:
+				openGearShop(player)
+				play sound "{@click_sound}" at volume {@click_sound_volume} to player
+			if index of event-slot = 14:
+				player command "/kristal"
+				play sound "{@click_sound}" at volume {@click_sound_volume} to player
+			if index of event-slot = 15:
+				openEndShop(player)
+				play sound "{@click_sound}" at volume {@click_sound_volume} to player
+			if index of event-slot = 22:
+				openFarmShop(player)
+				play sound "{@click_sound}" at volume {@click_sound_volume} to player
+		else if click type is left mouse button with shift or right mouse button with shift:
+			cancel event
+		
+# --------------END SHOP----------------
+
+function openEndShop(p: player):
+	set {_inv} to a new chest inventory with 3 row with name "{@endshop_title}"
+	set slot 18 of {_inv} to red stained glass pane named "<#fd0100>ʙᴀᴄᴋ" with lore "&fClick to go back"
+	set slot 9 of {_inv} to ender chest with lore "&fBuy Price: <#4FF750>$2,500" and "&a▸ Right Click to Quick Buy"
+	set slot 10 of {_inv} to ender pearl with lore "&fBuy Price: <#4FF750>${@gear.Enderpearl_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 11 of {_inv} to 16 of end stone with lore "&fBuy Price: <#4FF750>${@Endstone_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 12 of {_inv} to dragon breath with lore "&fBuy Price: <#4FF750>$1,000" and "&a▸ Right Click to Quick Buy"
+	set slot 13 of {_inv} to end rod with lore "&fBuy Price: <#4FF750>${@Endrod_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 14 of {_inv} to chorus fruit with lore "&fBuy Price: <#4FF750>${@Chorusfruit_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 15 of {_inv} to popped chorus fruit with lore "&fBuy Price: <#4FF750>${@PoppedChorusfruit_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 16 of {_inv} to shulker shell with lore "&fBuy Price: <#4FF750>${@Shulkershell_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 17 of {_inv} to shulker box with lore "&fBuy Price: <#4FF750>${@Shulkerbox_price}" and "&a▸ Right Click to Quick Buy"
+	open {_inv} to {_p}
+			
+on inventory click:
+	if name of event-inventory is "{@endshop_title}":
+		if clicked inventory isn't player's inventory:
+			cancel event
+			set {_q} to false
+			if click type is right mouse button or right mouse button with shift or left mouse button with shift:
+				set {_q} to true
+				
+			if index of event-slot = 18:
+				player command "/shop"
+				play sound "{@click_sound}" at volume {@click_sound_volume} to player
+			if index of event-slot = 9:
+				processClick(player, Ender Chest, {@Enderchest_price}, "End", 1, {_q})
+			if index of event-slot = 10:
+				processClick(player, Ender Pearl, {@gear.Enderpearl_price}, "End", 1, {_q})
+			if index of event-slot = 11:
+				processClick(player, End Stone, {@Endstone_price}, "End", 16, {_q})
+			if index of event-slot = 12:
+				processClick(player, Dragon Breath, {@Dragonbreath_price}, "End", 1, {_q})
+			if index of event-slot = 13:
+				processClick(player, End Rod, {@Endrod_price}, "End", 1, {_q})
+			if index of event-slot = 14:
+				processClick(player, Chorus Fruit, {@Chorusfruit_price}, "End", 1, {_q})
+			if index of event-slot = 15:
+				processClick(player, Popped Chorus Fruit, {@PoppedChorusfruit_price}, "End", 1, {_q})
+			if index of event-slot = 16:
+				processClick(player, Shulker Shell, {@Shulkershell_price}, "End", 1, {_q})
+			if index of event-slot = 17:
+				processClick(player, Shulker Box, {@Shulkerbox_price}, "End", 1, {_q})
+		else if click type is left mouse button with shift or right mouse button with shift:
+			cancel event
+
+# --------------NETHER SHOP----------------
+
+function openNetherShop(p: player):
+	set {_inv} to a new chest inventory with 3 row with name "{@nethershop_title}"
+	set slot 18 of {_inv} to red stained glass pane named "<#fd0100>ʙᴀᴄᴋ" with lore "&fClick to go back"
+	set slot 9 of {_inv} to blaze rod with lore "&fBuy Price: <#4FF750>${@Blazerod_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 10 of {_inv} to nether wart with lore "&fBuy Price: <#4FF750>${@Netherwart_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 11 of {_inv} to glowstone dust with lore "&fBuy Price: <#4FF750>${@Glowstonedust_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 12 of {_inv} to magma cream with lore "&fBuy Price: <#4FF750>${@Magmacream_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 13 of {_inv} to ghast tear with lore "&fBuy Price: <#4FF750>${@Ghasttear_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 14 of {_inv} to quartz with lore "&fBuy Price: <#4FF750>${@Quartz_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 15 of {_inv} to soul sand with lore "&fBuy Price: <#4FF750>${@Soulsand_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 16 of {_inv} to magma block with lore "&fBuy Price: <#4FF750>${@Magmablock_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 17 of {_inv} to crying obsidian with lore "&fBuy Price: <#4FF750>${@Cryingobsidian_price}" and "&a▸ Right Click to Quick Buy"
+	open {_inv} to {_p}  
+			
+on inventory click:
+	if name of event-inventory is "{@nethershop_title}":
+		if clicked inventory isn't player's inventory:
+			cancel event
+			set {_q} to false
+			if click type is right mouse button or right mouse button with shift or left mouse button with shift:
+				set {_q} to true
+				
+			if index of event-slot = 18:
+				player command "/shop"
+				play sound "{@click_sound}" at volume {@click_sound_volume} to player
+			if index of event-slot = 9:
+				processClick(player, Blaze Rod, {@Blazerod_price}, "Nether", 1, {_q})
+			if index of event-slot = 10:
+				processClick(player, Nether Wart, {@Netherwart_price}, "Nether", 1, {_q})
+			if index of event-slot = 11:
+				processClick(player, Glowstone Dust, {@Glowstonedust_price}, "Nether", 1, {_q})
+			if index of event-slot = 12:
+				processClick(player, Magma Cream, {@Magmacream_price}, "Nether", 1, {_q})
+			if index of event-slot = 13:
+				processClick(player, Ghast Tear, {@Ghasttear_price}, "Nether", 1, {_q})
+			if index of event-slot = 14:
+				processClick(player, Quartz, {@Quartz_price}, "Nether", 1, {_q})
+			if index of event-slot = 15:
+				processClick(player, Soul Sand, {@Soulsand_price}, "Nether", 1, {_q})
+			if index of event-slot = 16:
+				processClick(player, Magma Block, {@Magmablock_price}, "Nether", 1, {_q})
+			if index of event-slot = 17:
+				processClick(player, Crying Obsidian, {@Cryingobsidian_price}, "Nether", 1, {_q})
+		else if click type is left mouse button with shift or right mouse button with shift:
+			cancel event
+
+# --------------GEAR SHOP----------------
+
+function openGearShop(p: player):
+	set {_inv} to a new chest inventory with 3 row with name "{@gearshop_title}"
+	set slot 18 of {_inv} to red stained glass pane named "<#fd0100>ʙᴀᴄᴋ" with lore "&fClick to go back"
+	set slot 9 of {_inv} to obsidian with lore "&fBuy Price: <#4FF750>${@Obsidian_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 10 of {_inv} to end crystal with lore "&fBuy Price: <#4FF750>${@Endcrystal_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 11 of {_inv} to respawn anchor with lore "&fBuy Price: <#4FF750>$1,000" and "&a▸ Right Click to Quick Buy"
+	set slot 12 of {_inv} to glowstone with lore "&fBuy Price: <#4FF750>${@Glowstone_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 13 of {_inv} to totem of undying with lore "&fBuy Price: <#4FF750>$1,250" and "&a▸ Right Click to Quick Buy"
+	set slot 14 of {_inv} to ender pearl with lore "&fBuy Price: <#4FF750>${@gear.Enderpearl_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 15 of {_inv} to golden apple with lore "&fBuy Price: <#4FF750>${@gear.Goldenapple_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 16 of {_inv} to experience bottle with lore "&fBuy Price: <#4FF750>${@Bottleo'enchanting_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 17 of {_inv} to arrow with lore "&fBuy Price: <#4FF750>${@Arrow_price}" and "&a▸ Right Click to Quick Buy"
+	open {_inv} to {_p}		
+
+on inventory click:
+	if name of event-inventory is "{@gearshop_title}":
+		if clicked inventory isn't player's inventory:
+			cancel event
+			set {_q} to false
+			if click type is right mouse button or right mouse button with shift or left mouse button with shift:
+				set {_q} to true
+				
+			if index of event-slot = 18:
+				player command "/shop"
+				play sound "{@click_sound}" at volume {@click_sound_volume} to player
+			if index of event-slot = 9:
+				processClick(player, Obsidian, {@Obsidian_price}, "Gear", 1, {_q})
+			if index of event-slot = 10:
+				processClick(player, End Crystal, {@Endcrystal_price}, "Gear", 1, {_q})
+			if index of event-slot = 11:
+				processClick(player, Respawn Anchor, {@Respawnanchor_price}, "Gear", 1, {_q})
+			if index of event-slot = 12:
+				processClick(player, GlowStone, {@Glowstone_price}, "Gear", 1, {_q})
+			if index of event-slot = 13:
+				processClick(player, Totem Of Undying, {@Totemofundying_price}, "Gear", 1, {_q})
+			if index of event-slot = 14:
+				processClick(player, Ender Pearl, {@gear.Enderpearl_price}, "Gear", 1, {_q})
+			if index of event-slot = 15:
+				processClick(player, Golden Apple, {@gear.Goldenapple_price}, "Gear", 1, {_q})
+			if index of event-slot = 16:
+				processClick(player, Experience Bottle, {@Bottleo'enchanting_price}, "Gear", 1, {_q})
+			if index of event-slot = 17:
+				processClick(player, Arrow, {@Arrow_price}, "Gear", 1, {_q})
+		else if click type is left mouse button with shift or right mouse button with shift:
+			cancel event
+								
+# --------------FOOD SHOP---------------- 
+
+function openFoodShop(p: player):			
+	set {_inv} to a new chest inventory with 3 row with name "{@foodshop_title}"
+	set slot 18 of {_inv} to red stained glass pane named "<#fd0100>ʙᴀᴄᴋ" with lore "&fClick to go back"
+	set slot 9 of {_inv} to potato with lore "&fBuy Price: <#4FF750>${@Potato_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 10 of {_inv} to sweet berries with lore "&fBuy Price: <#4FF750>${@Sweetberries_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 11 of {_inv} to melon slice with lore "&fBuy Price: <#4FF750>${@Melonslice_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 12 of {_inv} to carrot with lore "&fBuy Price: <#4FF750>${@Carrot_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 13 of {_inv} to apple with lore "&fBuy Price: <#4FF750>${@Apple_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 14 of {_inv} to cooked chicken with lore "&fBuy Price: <#4FF750>${@Cookedchicken_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 15 of {_inv} to cooked beef with lore "&fBuy Price: <#4FF750>${@Steak_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 16 of {_inv} to golden carrot with lore "&fBuy Price: <#4FF750>${@Goldencarrot_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 17 of {_inv} to golden apple with lore "&fBuy Price: <#4FF750>${@food.Goldenapple_price}" and "&a▸ Right Click to Quick Buy"
+	open {_inv} to {_p}
+			
+on inventory click:
+	if name of event-inventory is "{@foodshop_title}":
+		if clicked inventory isn't player's inventory:
+			cancel event
+			set {_q} to false
+			if click type is right mouse button or right mouse button with shift or left mouse button with shift:
+				set {_q} to true
+				
+			if index of event-slot = 18:
+				player command "/shop"
+				play sound "{@click_sound}" at volume {@click_sound_volume} to player
+			if index of event-slot = 9:
+				processClick(player, Potato, {@Potato_price}, "Food", 1, {_q})
+			if index of event-slot = 10:
+				processClick(player, Sweet Berries, {@Sweetberries_price}, "Food", 1, {_q})
+			if index of event-slot = 11:
+				processClick(player, Melon Slice, {@Melonslice_price}, "Food", 1, {_q})
+			if index of event-slot = 12:
+				processClick(player, Carrot, {@Carrot_price}, "Food", 1, {_q})
+			if index of event-slot = 13:
+				processClick(player, Apple, {@Apple_price}, "Food", 1, {_q})
+			if index of event-slot = 14:
+				processClick(player, Cooked Chicken, {@Cookedchicken_price}, "Food", 1, {_q})
+			if index of event-slot = 15:
+				processClick(player, Cooked Beef, {@Steak_price}, "Food", 1, {_q})
+			if index of event-slot = 16:
+				processClick(player, Golden Carrot, {@Goldencarrot_price}, "Food", 1, {_q})
+			if index of event-slot = 17:
+				processClick(player, Golden Apple, {@food.Goldenapple_price}, "Food", 1, {_q})
+		else if click type is left mouse button with shift or right mouse button with shift:
+			cancel event
+
+# --------------PVP SHOP---------------- 
+
+function getPvpItem(type: text) :: item:
+	if {_type} is "helmet":
+		set {_item} to diamond helmet
+		enchant {_item} with protection 4
+		enchant {_item} with unbreaking 3
+		enchant {_item} with mending 1
+		return {_item}
+	else if {_type} is "chestplate":
+		set {_item} to diamond chestplate
+		enchant {_item} with protection 4
+		enchant {_item} with unbreaking 3
+		enchant {_item} with mending 1
+		return {_item}
+	else if {_type} is "leggings":
+		set {_item} to diamond leggings
+		enchant {_item} with protection 4
+		enchant {_item} with unbreaking 3
+		enchant {_item} with mending 1
+		return {_item}
+	else if {_type} is "boots":
+		set {_item} to diamond boots
+		enchant {_item} with protection 4
+		enchant {_item} with unbreaking 3
+		enchant {_item} with mending 1
+		return {_item}
+	else if {_type} is "sword":
+		set {_item} to diamond sword
+		enchant {_item} with sharpness 3
+		enchant {_item} with unbreaking 3
+		enchant {_item} with mending 1
+		return {_item}
+
+function openPvpShop(p: player):
+	set {_inv} to a new chest inventory with 3 row with name "{@pvpshop_title}"
+	set slot 18 of {_inv} to red stained glass pane named "<#fd0100>ʙᴀᴄᴋ" with lore "&fClick to go back"
+	
+	set {_helmet} to getPvpItem("helmet")
+	set {_chestplate} to getPvpItem("chestplate")
+	set {_leggings} to getPvpItem("leggings")
+	set {_boots} to getPvpItem("boots")
+	set {_sword} to getPvpItem("sword")
+	
+	set slot 11 of {_inv} to {_helmet} with lore "&fBuy Price: <#4FF750>${@Diamondhelmet_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 12 of {_inv} to {_chestplate} with lore "&fBuy Price: <#4FF750>${@Diamondchestplate_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 13 of {_inv} to {_leggings} with lore "&fBuy Price: <#4FF750>${@Diamondleggings_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 14 of {_inv} to {_boots} with lore "&fBuy Price: <#4FF750>${@Diamondboots_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 15 of {_inv} to {_sword} with lore "&fBuy Price: <#4FF750>${@Diamondsword_price}" and "&a▸ Right Click to Quick Buy"
+	
+	open {_inv} to {_p}
+
+on inventory click:
+	if name of event-inventory is "{@pvpshop_title}":
+		if clicked inventory isn't player's inventory:
+			cancel event
+			set {_q} to false
+			if click type is right mouse button or right mouse button with shift or left mouse button with shift:
+				set {_q} to true
+				
+			if index of event-slot = 18:
+				player command "/shop"
+				play sound "{@click_sound}" at volume {@click_sound_volume} to player
+			if index of event-slot = 11:
+				processClick(player, getPvpItem("helmet"), {@Diamondhelmet_price}, "PvP", 1, {_q})
+			if index of event-slot = 12:
+				processClick(player, getPvpItem("chestplate"), {@Diamondchestplate_price}, "PvP", 1, {_q})
+			if index of event-slot = 13:
+				processClick(player, getPvpItem("leggings"), {@Diamondleggings_price}, "PvP", 1, {_q})
+			if index of event-slot = 14:
+				processClick(player, getPvpItem("boots"), {@Diamondboots_price}, "PvP", 1, {_q})
+			if index of event-slot = 15:
+				processClick(player, getPvpItem("sword"), {@Diamondsword_price}, "PvP", 1, {_q})
+		else if click type is left mouse button with shift or right mouse button with shift:
+			cancel event
+
+# --------------FARM SHOP---------------- 
+
+function openFarmShop(p: player):
+	set {_inv} to a new chest inventory with 3 row with name "{@farmshop_title}"
+	set slot 18 of {_inv} to red stained glass pane named "<#fd0100>ʙᴀᴄᴋ" with lore "&fClick to go back"
+	
+	set slot 2 of {_inv} to piston with lore "&fBuy Price: <#4FF750>${@Piston_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 3 of {_inv} to sticky piston with lore "&fBuy Price: <#4FF750>${@Stickypiston_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 4 of {_inv} to redstone with lore "&fBuy Price: <#4FF750>${@Redstonedust_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 5 of {_inv} to redstone block with lore "&fBuy Price: <#4FF750>${@Redstoneblock_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 6 of {_inv} to note block with lore "&fBuy Price: <#4FF750>${@Noteblock_price}" and "&a▸ Right Click to Quick Buy"
+	
+	set slot 11 of {_inv} to redstone torch with lore "&fBuy Price: <#4FF750>${@Redstonetorch_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 12 of {_inv} to tripwire hook with lore "&fBuy Price: <#4FF750>${@Tripwirehook_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 13 of {_inv} to hopper with lore "&fBuy Price: <#4FF750>${@Hopper_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 14 of {_inv} to chest with lore "&fBuy Price: <#4FF750>${@Chest_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 15 of {_inv} to repeater with lore "&fBuy Price: <#4FF750>${@Repeater_price}" and "&a▸ Right Click to Quick Buy"
+	set slot 16 of {_inv} to comparator with lore "&fBuy Price: <#4FF750>${@Comparator_price}" and "&a▸ Right Click to Quick Buy"
+	
+	open {_inv} to {_p}
+
+on inventory click:
+	if name of event-inventory is "{@farmshop_title}":
+		if clicked inventory isn't player's inventory:
+			cancel event
+			set {_q} to false
+			if click type is right mouse button or right mouse button with shift or left mouse button with shift:
+				set {_q} to true
+				
+			if index of event-slot = 18:
+				player command "/shop"
+				play sound "{@click_sound}" at volume {@click_sound_volume} to player
+			if index of event-slot = 2:
+				processClick(player, Piston, {@Piston_price}, "Farm", 1, {_q})
+			if index of event-slot = 3:
+				processClick(player, Sticky Piston, {@Stickypiston_price}, "Farm", 1, {_q})
+			if index of event-slot = 4:
+				processClick(player, Redstone Dust, {@Redstonedust_price}, "Farm", 1, {_q})
+			if index of event-slot = 5:
+				processClick(player, Redstone Block, {@Redstoneblock_price}, "Farm", 1, {_q})
+			if index of event-slot = 6:
+				processClick(player, Note Block, {@Noteblock_price}, "Farm", 1, {_q})
+			if index of event-slot = 11:
+				processClick(player, Redstone Torch, {@Redstonetorch_price}, "Farm", 1, {_q})
+			if index of event-slot = 12:
+				processClick(player, Tripwire Hook, {@Tripwirehook_price}, "Farm", 1, {_q})
+			if index of event-slot = 13:
+				processClick(player, Hopper, {@Hopper_price}, "Farm", 1, {_q})
+			if index of event-slot = 14:
+				processClick(player, Chest, {@Chest_price}, "Farm", 1, {_q})
+			if index of event-slot = 15:
+				processClick(player, Repeater, {@Repeater_price}, "Farm", 1, {_q})
+			if index of event-slot = 16:
+				processClick(player, Comparator, {@Comparator_price}, "Farm", 1, {_q})
+		else if click type is left mouse button with shift or right mouse button with shift:
+			cancel event
+						
+# --------------BUY GUI---------------- 
+
+function formatSmallCaps(input: text) :: text:
+    set {_text} to {_input}
+    set {_smallcaps::*} to "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘqʀꜱᴛᴜᴠᴡxʏᴢ" split at ""
+    set {_normal::*} to "abcdefghijklmnopqrstuvwxyz" split at ""
+    loop {_normal::*}:
+        replace all "%loop-value%" with "%{_smallcaps::%loop-index%}%" in {_text}
+    return {_text}
+    
+function a(b: text) :: text:
+  if length of {_b} > 3:
+    return "%a(first length of {_b} - 3 characters of {_b})%,%last 3 characters of {_b}%"
+  return {_b}
+  
+function buy(p: player, item: item, price: int, category: string): 
+	if {n.%{_p}%} is not set:
+		set {n.%{_p}%} to 1
+	set {_qty} to {n.%{_p}%}
+	set {_max} to max stack size of {_item}
+
+	set {_itemName} to formatSmallCaps("%type of {_item}%")
+	set {_inv} to a new chest inventory with 3 row named "BUYING: %{_itemName}%"
+	set {_priceText} to "%{_qty} * {_price}%"
+	set slot 13 of {_inv} to {_qty} of {_item} with lore "&fBuy Price: <#4FF750>$%a({_priceText})%"
+
+	if {_max} > 1:
+		if {_qty} > 1:
+			set slot 9 of {_inv} to {_max} of red stained glass pane named "&cRemove % {_max}%"
+			set slot 11 of {_inv} to red stained glass pane named "&cRemove 1"
+		if {_qty} > 10:
+			set slot 10 of {_inv} to 10 of red stained glass pane named "&cRemove 10"
+		if {_qty} < {_max}:
+			set slot 15 of {_inv} to lime stained glass pane named "&aAdd 1"
+			set slot 17 of {_inv} to {_max} of lime stained glass pane named "&aSet to % {_max}%"
+			set {_leftToMax} to {_max} - {_qty}
+			if {_leftToMax} >= 10:
+				set slot 16 of {_inv} to 10 of lime stained glass pane named "&aAdd 10"
+			else:
+				set slot 16 of {_inv} to air
+	else:
+		set slot 9, 10, 11, 15, 16, 17 of {_inv} to air
+
+	set slot 21 of {_inv} to red stained glass pane named "<#fd0100>ᴄᴀɴᴄᴇʟ" with lore "&fClick to cancel"
+	set slot 23 of {_inv} to lime stained glass pane named "<#01fc01>ᴄᴏɴꜰɪʀᴍ" with lore "&fClick to purchase" and "&a▸ Right Click to Buy Maximum"
+
+	set {item.%{_p}%} to {_item}
+	set {price.%{_p}%} to {_price}
+	set {category.%{_p}%} to {_category}
+	open {_inv} to {_p}
+
+on inventory click:
+	if name of event-inventory contains "BUYING:":
+		if clicked inventory isn't player's inventory:
+			cancel event
+			set {_p} to player
+			set {_item} to {item.%{_p}%}
+			set {_maxStackSize} to max stack size of {_item}
+			set {_guiname} to {guiname.%{_p}%}
+			set {_price} to {price.%{_p}%}
+			set {_category} to {category.%{_p}%}
+
+			if {_maxStackSize} > 1:
+				if {n.%{_p}%} > 1:
+					if index of event-slot = 11:
+						remove 1 from {n.%{_p}%}
+						play sound "{@click_sound}" at volume {@click_sound_volume} to {_p}
+						buy({_p}, {_item}, {_price}, {_category})
+					if index of event-slot = 9:
+						set {n.%{_p}%} to 1
+						play sound "{@click_sound}" at volume {@click_sound_volume} to {_p}
+						buy({_p}, {_item}, {_price}, {_category})
+
+				if {n.%{_p}%} > 10:
+					if index of event-slot = 10:
+						remove 10 from {n.%{_p}%}
+						play sound "{@click_sound}" at volume {@click_sound_volume} to {_p}
+						buy({_p}, {_item}, {_price}, {_category})
+
+				if {n.%{_p}%} < {_maxStackSize}:
+					if index of event-slot = 15:
+						add 1 to {n.%{_p}%}
+						play sound "{@click_sound}" at volume {@click_sound_volume} to {_p}
+						buy({_p}, {_item}, {_price}, {_category})
+
+					if index of event-slot = 17:
+						set {n.%{_p}%} to {_maxStackSize}
+						play sound "{@click_sound}" at volume {@click_sound_volume} to {_p}
+						buy({_p}, {_item}, {_price}, {_category})
+
+				set {_maxAdd10} to {_maxStackSize} - {n.%{_p}%}
+				if {_maxAdd10} >= 10:
+					if index of event-slot = 16:
+						add 10 to {n.%{_p}%}
+						play sound "{@click_sound}" at volume {@click_sound_volume} to {_p}
+						buy({_p}, {_item}, {_price}, {_category})
+		else if click type is left mouse button with shift or right mouse button with shift:
+			cancel event
+						
+	if name of event-inventory contains "BUYING:":
+		if clicked inventory isn't player's inventory:					
+			cancel event
+			if index of event-slot = 23:
+				set {_p} to player
+				set {_item} to {item.%{_p}%}
+				set {_price} to {price.%{_p}%}
+				set {_category} to {category.%{_p}%}
+				set {_guiname} to {guiname.%{_p}%}
+				
+				if click type is right mouse button or right mouse button with shift or left mouse button with shift:
+					set {_amount} to max stack size of {_item}
+				else:
+					set {_amount} to {n.%{_p}%}
+					
+				set {_totalCost} to {_amount} * {_price}
+				if player doesn't have enough space for {_amount} of {_item}:
+					send {@inventory_full_text}
+					send action bar {@inventory_full_text}
+					play sound "{@purchase_unsuccessful_sound}" at volume {@purchase_unsuccessful_sound_volume} to player
+					play sound "{@click_sound}" at volume {@click_sound_volume} to player
+					buy({_p}, {_item}, {_price}, {_category})
+				else:
+					if player's balance is higher or equal to {_totalCost}:
+						if {_item} is not air:
+							give player {_amount} of {_item}
+							remove {_totalCost} from player's balance
+							set {_formattedPrice} to a("%{_totalCost}%")
+							set {_itemName} to proper case "%type of {_item}%"
+							send {@purchase_successful_text} to player
+							send action bar {@purchase_successful_text} to player
+							play sound "{@purchase_successful_sound}" at volume {@purchase_successful_sound_volume} to player
+							play sound "{@click_sound}" at volume {@click_sound_volume} to player
+							buy({_p}, {_item}, {_price}, {_category})
+					else:
+						send {@not_enough_money_text}
+						send action bar {@not_enough_money_text}
+						play sound "{@purchase_unsuccessful_sound}" at volume {@purchase_unsuccessful_sound_volume} to player
+						play sound "{@click_sound}" at volume {@click_sound_volume} to player
+						buy({_p}, {_item}, {_price}, {_category})
+		else if click type is left mouse button with shift or right mouse button with shift:
+			cancel event
+					
+	if name of event-inventory contains "BUYING:":
+		if clicked inventory isn't player's inventory:
+			cancel event
+			if index of event-slot = 21:
+				if {category.%player%} is "Nether":
+					openNetherShop(player)
+				else if {category.%player%} is "End":
+					openEndShop(player)
+				else if {category.%player%} is "Gear":
+					openGearShop(player)
+				else if {category.%player%} is "Food":
+					openFoodShop(player)
+				else if {category.%player%} is "PvP":
+					openPvpShop(player)
+				else if {category.%player%} is "Farm":
+					openFarmShop(player)
+				else:
+					player command "/shop"
+				play sound "{@click_sound}" at volume {@click_sound_volume} to player
+		else if click type is left mouse button with shift or right mouse button with shift:
+			cancel event
